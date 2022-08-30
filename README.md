@@ -19,9 +19,10 @@ moth \[COMMAND\] \<optional args>
 
 ## installation
 
-compile moth using gcc or any c compiler
-1. gcc moth.c -o moth
-2. sudo mv moth /usr/bin
+compile and install moth using cargo.
+
+1. `cargo build --release`
+2. the binary will be located in target/release/moth. from there install it to where you'd like. 
 
 moth is heavily inspired by [bug](http://vicerveza.homeunix.net/~viric/soft/bug/) by Lluís Batlle i Rossell.
 
