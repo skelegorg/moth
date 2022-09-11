@@ -1,22 +1,27 @@
 use std::fs;
 use std::io::prelude::*;
+use std::io::Error;
+use std::io::ErrorKind;
 
 // ID DETERMINED BY ORDER READ FROM FILE - NOT SAVED IN FILE
 
-struct Item {
-    title: String,
-    description: String,
+pub struct Item {
+    pub title: String,
+    pub description: String,
     // remember to cap prio to u8
-    priority: u8,
-    status: String
+    pub priority: u8,
+    pub status: String
 }
 impl Item {
-    fn serialize(self) -> String {
+    pub fn serialize(self) -> String {
         format!("PRIO:{}\nSTATUS:{}\nTITLE:{}\nDESC:{}\n", self.priority, self.status, self.title, self.description)
+    }
+    pub fn cmp(&self, b: &Item) -> std::cmp::Ordering {
+        self.priority.cmp(&b.priority)
     }
 }
 
-fn deserialize_item(ser: &str) -> Result<Item, std::io::Error> {
+pub fn deserialize_item(ser: &str) -> Result<Item, Error> {
     let lines: Vec<&str> = ser.split("\n").collect();
     let (mut prc, mut stc, mut tic) = (false, false, false);
     let mut pr: u8 = 1;
@@ -53,29 +58,20 @@ fn deserialize_item(ser: &str) -> Result<Item, std::io::Error> {
                 status: st
         })
     } else {
-        Err(std::io::Error::from(std::io::ErrorKind::InvalidData))
+        Err(Error::from(ErrorKind::InvalidData))
     }
 }
 
-pub fn add() {
-// env::temp_dir
-}
-
-pub fn add_with_args(args: Vec<String>) {
-
-}
-
-
-fn read_items_from_file(fp: &str) -> Result<Vec<Item>, std::io::Error> {
+pub fn read_items_from_file(fp: &str) -> Result<Vec<Item>, Error> {
     match fs::File::open(fp) {
         Err(msg) => {
             println!("moth: failed to open project at {}: {}", fp, msg);
-            return Err(std::io::Error::from(std::io::ErrorKind::NotFound))
+            return Err(Error::from(ErrorKind::NotFound))
         }
         Ok(mut file) => {
             let mut contents = String::new();
             if file.read_to_string(&mut contents).is_err() {
-                return Err(std::io::Error::from(std::io::ErrorKind::NotFound))
+                return Err(Error::from(ErrorKind::NotFound))
             }
             let mut items: Vec<Item> = Vec::new();
             let strsplt: Vec<&str> = contents.split("--PGBRK--\n").collect();
@@ -87,7 +83,7 @@ fn read_items_from_file(fp: &str) -> Result<Vec<Item>, std::io::Error> {
                 if desr.is_ok() {
                     items.push(desr.unwrap());
                 } else {
-                    println!("moth: invalid item found, skipping...")
+                    println!("moth: invalid item found while reading, skipping...")
                 }
             }
             Ok(items)
@@ -95,26 +91,27 @@ fn read_items_from_file(fp: &str) -> Result<Vec<Item>, std::io::Error> {
     }
 }
 
-fn write_items_to_file(items: Vec<Item>, fp: &str) -> Result<(), std::io::Error> {
+pub fn write_items_to_file(items: Vec<Item>, fp: &str) -> Result<(), Error> {
     // im not super happy about using an ascii file to store these but
     // i prefer it to adding non-standard dependencies to this project.
     let mut serialized_items: Vec<String> = Vec::new();
     for i in items {
         serialized_items.push(i.serialize());
     }
-    match fs::File::open(fp) {
+    match fs::File::create(fp) {
         Err(msg) => {
-            println!("moth: failed to open project at {}: {}", fp, msg);
-            return Err(std::io::Error::from(std::io::ErrorKind::NotFound))
+            println!("moth: failed to open project at {fp}: {msg}");
+            return Err(Error::from(ErrorKind::NotFound))
         },
         Ok(mut file) => {
-            let res = file.write(serialized_items.join("--PGBRK--\n").as_bytes());
-            match res {
+            match file.write(serialized_items.join("--PGBRK--\n").as_bytes()) {
                 Err(msg) => {
-                    println!("moth: failed to write to project at {}: {}", fp, msg);
-                    return Err(std::io::Error::from(std::io::ErrorKind::Other))
+                    println!("moth: failed to write to file at {fp}: {msg}");
+                    return Err(Error::from(ErrorKind::Other))
                 },
-                Ok(_) => return Ok(())
+                Ok(_) => {
+                    return Ok(())
+                }
             }
         }
     }

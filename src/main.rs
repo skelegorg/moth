@@ -3,7 +3,7 @@
 use std::env;
 use std::fs;
 
-mod lib;
+mod fns;
 
 fn main() -> Result<(), std::io::Error> {
     let args: Vec<String> = env::args().collect();
@@ -26,17 +26,41 @@ fill in later lol
             match arg.as_str() {
                 "add" => {
                     if args.len() == 2 {
-                        lib::add();
+                        fns::functions::add();
                     } else {
-                        lib::add_with_args(args);
+                        fns::functions::add_with_args(args);
+                    }
+                },
+                "list" => {
+                    if args.len() == 2 {
+                        fns::functions::list();
+                    } else {
+                        fns::functions::list_with_args(args);
+                    }
+                },
+                "del" => {
+                    if args.len() == 2 {
+                        println!("moth: id argument required for \'del\'.")
+                    } else {
+                        let arg = args[2].parse::<u8>();
+                        if arg.is_ok() {
+                            fns::functions::del(arg.unwrap() - 1);
+                        } else {
+                            println!("moth: id argument must be an integer.")
+                        }
                     }
                 },
                 "view" => println!("view"),
-                "del" => println!("del"),
-                "list" => println!("list"),
                 "edit" => println!("edit"),
                 "close" => println!("close"),
-                "load" => println!("load"),
+                "load" => {
+                    if args.len() == 2 {
+                        fns::functions::load(&format!("{}/.moth/loaded", env::var("HOME").ok().unwrap()));
+                        println!("moth: loaded default config at ~/.moth/default.moth")
+                    } else {
+                        fns::functions::load(&args[2]);
+                    }
+                },
                 _ => println!("moth: option {} not found.", arg)
             }
             Ok(())
