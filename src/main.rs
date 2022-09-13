@@ -2,10 +2,11 @@
 
 use std::env;
 use std::fs;
+use std::process::ExitCode;
 
 mod fns;
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> ExitCode {
     let args: Vec<String> = env::args().collect();
     let helpstring = String::from("
 usage: moth [OPTION] <optional args>
@@ -63,11 +64,11 @@ fill in later lol
                 },
                 _ => println!("moth: option {} not found.", arg)
             }
-            Ok(())
+            ExitCode::SUCCESS
         },
         None => {
             println!("moth is a minimal todo manager\n{}", helpstring);
-            Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, ""))
+            ExitCode::FAILURE
         }
     }
 }

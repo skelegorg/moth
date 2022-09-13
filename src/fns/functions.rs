@@ -42,8 +42,25 @@ pub fn add() {
     }
     let mut strsplt: Vec<&str> = contents.split("\n").collect();
     strsplt.remove(0); strsplt.remove(0);
-    let item = ops::deserialize_item(&strsplt.join("\n"));
-    
+    let item_r = ops::deserialize_item(&strsplt.join("\n"));
+    if item_r.is_err() {
+        println!("moth: malformed item entry.")
+    }
+    let item = item_r.ok().unwrap();
+    let items_r = ops::read_items_from_file(&load_path());
+    if items_r.is_err() {
+        println!("moth: failed to read items from {}", load_path())
+    }
+    let mut items = items_r.ok().unwrap();
+    items.push(item);
+    match ops::write_items_to_file(items, &load_path()) {
+        Err(_) => {
+            println!("moth: failed to write items to {}", load_path())
+        }
+        Ok(_) => {
+            println!("moth: item added")
+        }
+    }
 }
 
 pub fn add_with_args(args: Vec<String>) {
