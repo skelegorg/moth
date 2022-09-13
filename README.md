@@ -14,6 +14,7 @@ moth \[COMMAND\] \<optional args>
 |list \<status>|lists ids + titles of items with given status (default open) sorted by priority|
 |edit \<id>|enters item edit dialogue|
 |close \<id>|changes item status to "closed"|
+|clear|deletes all items with status "closed"|
 |load \<path>| load a given project file. default file is ~/.moth/default.moth|
 
 
@@ -24,6 +25,6 @@ compile and install moth using cargo.
 1. `cargo build --release`
 2. the binary will be located in target/release/moth. from there install it to where you'd like. 
 
-moth is heavily inspired by [bug](http://vicerveza.homeunix.net/~viric/soft/bug/) by Lluís Batlle i Rossell.
+moth is inspired by [bug](http://vicerveza.homeunix.net/~viric/soft/bug/) by Lluís Batlle i Rossell.
 
 this program seeks to adhere to the suckless philosophy.
