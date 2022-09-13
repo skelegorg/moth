@@ -10,7 +10,19 @@ fn main() -> ExitCode {
     let args: Vec<String> = env::args().collect();
     let helpstring = String::from("
 usage: moth [OPTION] <optional args>
-fill in later lol
+
+OPTIONS:
+
+add                       : opens dialogue to create a new item
+add   <optional arg>      : adds a new item with priority 1, status \"open\", title [argument], and an empty description
+list                      : lists all items with the status \"open\"
+list  <optional arg>      : lists all items with the status [argument]
+del   <arg>               : deletes item with id [arg]
+edit  <arg>               : opens edit dialogue for item with id [arg]
+view  <arg>               : prints all data regarding item with id [arg]
+close <arg>               : chanegs the status of item with id [arg] to \"closed\"
+clear                     : deletes all items with status \"closed\"
+load  <opt file path>     : loads a different .moth file. running with no argument loads the default.
     ");
 
     // check for existance of default file - create if gone
