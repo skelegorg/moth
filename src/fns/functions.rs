@@ -44,7 +44,8 @@ pub fn add() {
     strsplt.remove(0); strsplt.remove(0);
     let item_r = ops::deserialize_item(&strsplt.join("\n"));
     if item_r.is_err() {
-        println!("moth: malformed item entry.")
+        println!("moth: malformed item entry.");
+        return
     }
     let item = item_r.ok().unwrap();
     let items_r = ops::read_items_from_file(&load_path());
@@ -97,7 +98,9 @@ pub fn list() {
     let mut count: u8 = 0;
     for i in items {
         count += 1;
-        println!("{}: {}", count, i.title);
+        if i.status == "open".to_string() {
+            println!("{}: {}", count, i.title);
+        }
     }
 }
 
@@ -132,6 +135,10 @@ pub fn del(arg: u8) {
         return
     }
     let mut items = items_r.ok().unwrap();
+    if arg >= items.len() as u8 {
+        println!("moth: id above range");
+        return
+    }
     items.sort_by(|a, b| a.cmp(b));
     items.remove(arg.into());
     let ret = ops::write_items_to_file(items, &load_path());
@@ -153,6 +160,142 @@ pub fn load(pre_arg: &String) {
         }
         Err(msg) => {
             println!("moth: failed to open or create load file: {msg}");
+        }
+    }
+}
+
+pub fn edit(arg: u8) {
+    let items_r = ops::read_items_from_file(&load_path());
+    if items_r.is_err() {
+        println!("moth: failed to read items from {}", load_path());
+        return
+    }
+    let mut items = items_r.ok().unwrap();
+    if arg >= items.len() as u8 {
+        println!("moth: id above range")
+    }
+    items.sort_by(|a, b| a.cmp(b));
+    let item: &ops::Item = &items[arg as usize];
+    let r = fs::File::create("/tmp/mothtask.tmp");
+    if r.is_err() {
+        println!("moth: failed to create temporary file")
+    }
+    let mut file = r.ok().unwrap();
+    let r = file.write(format!("Insert values after the colons - prio must be a number, description can be multi-lined\n\nPRIO:{}\nSTATUS:{}\nTITLE:{}\nDESC:{}", item.priority, item.status, item.title, item.description).as_bytes());
+    items.remove(arg.into());
+    if r.is_err() {
+        println!("moth: failed to write to temporary file")
+    }
+
+    // spawn editor instance to edit file
+    let editor_r = env::var("EDITOR");
+    let editor = if editor_r.is_err() {
+        println!("moth: failed to get $EDITOR from environment vars. proceeding with nano as default.");
+        "nano".to_string()
+    } else {
+        editor_r.ok().unwrap()
+    };
+    let _ = Command::new("sh")
+        .arg("-c")
+        .arg(format!("{} /tmp/mothtask.tmp", editor))
+        .status()
+        .expect("moth: failed to spawn default editor");
+
+    // parse file to get values, initialize Item object, add to vec, rewrite to file
+    let r = fs::File::open("/tmp/mothtask.tmp");
+    if r.is_err() {
+        println!("moth: failed to open temporary file to read")
+    }
+    let mut file = r.ok().unwrap();
+    let mut contents = String::new();
+    if file.read_to_string(&mut contents).is_err() {
+        println!("moth: failed to read temporary file")
+    }
+    let mut strsplt: Vec<&str> = contents.split("\n").collect();
+    strsplt.remove(0); strsplt.remove(0);
+    let item_r = ops::deserialize_item(&strsplt.join("\n"));
+    if item_r.is_err() {
+        println!("moth: malformed item entry.");
+        return
+    }
+    let nitem = item_r.ok().unwrap();
+    items.insert(arg.into(), nitem);
+    match ops::write_items_to_file(items, &load_path()) {
+        Err(_) => {
+            println!("moth: failed to write items to {}", load_path())
+        }
+        Ok(_) => {
+            println!("moth: item edited")
+        }
+    }
+}
+
+pub fn view(arg: u8) {
+    let items_r = ops::read_items_from_file(&load_path());
+    if items_r.is_err() {
+        println!("moth: failed to read items from {}", load_path());
+        return
+    }
+    let mut items = items_r.ok().unwrap();
+    if arg >= items.len() as u8 {
+        println!("moth: id above range")
+    }
+    items.sort_by(|a, b| a.cmp(b));
+    let item: &ops::Item = &items[arg as usize];
+    println!("priority: {}", item.priority);
+    println!("status: {}", item.status);
+    println!("\n{}\n\n{}", item.title, item.description);
+}
+
+pub fn close(arg: u8) {
+    let items_r = ops::read_items_from_file(&load_path());
+    if items_r.is_err() {
+        println!("moth: failed to read items from {}", load_path());
+        return
+    }
+    let mut items = items_r.ok().unwrap();
+    if arg >= items.len() as u8 {
+        println!("moth: id above range")
+    }
+    items.sort_by(|a, b| a.cmp(b));
+    items[arg as usize].status = "closed".to_string();
+    match ops::write_items_to_file(items, &load_path()) {
+        Err(_) => {
+            println!("moth: failed to write items to {}", load_path())
+        }
+        Ok(_) => {
+            println!("moth: item closed")
+        }
+    }
+}
+
+pub fn clear() {
+    let items_r = ops::read_items_from_file(&load_path());
+    if items_r.is_err() {
+        println!("moth: failed to read items from {}", load_path());
+        return
+    }
+    let mut items = items_r.ok().unwrap();
+    items.sort_by(|a, b| a.cmp(b));
+    let mut l: Vec<usize> = vec![];
+    for i in 0..items.len() {
+        if items[i].status == "closed".to_string() {
+            l.push(i);
+        }
+    }
+    let num = l.len();
+    println!("moth: clearing {} closed item(s)", num);
+    let mut sub = 0;
+    for i in l {
+        items.remove(i + sub);
+        sub += 1;
+    }
+    match ops::write_items_to_file(items, &load_path()) {
+        Err(_) => {
+            println!("moth: failed to write items to {}", load_path())
+        }
+        Ok(_) => {
+            println!("moth: item(s) cleared")
         }
     }
 }

@@ -16,6 +16,10 @@ fill in later lol
     // check for existance of default file - create if gone
     if !std::path::Path::new(&format!("{}/.moth/default.moth", env::var("HOME").ok().unwrap())).exists() {
         println!("moth: it looks like this is your first time using moth. creating default file at ~/.moth/default.moth");
+        let r = fs::create_dir(&format!("{}/.moth", env::var("HOME").ok().unwrap()));
+        if r.is_err() {
+            println!("moth: failed to create default directory.")
+        }
         let re = fs::File::create(&format!("{}/.moth/default.moth", env::var("HOME").ok().unwrap()));
         if re.is_err() {
             println!("moth: failed to create default file. moth operations will fail until a .moth file is loaded.")
@@ -51,9 +55,45 @@ fill in later lol
                         }
                     }
                 },
-                "view" => println!("view"),
-                "edit" => println!("edit"),
-                "close" => println!("close"),
+                "edit" => {
+                    if args.len() == 2 {
+                        println!("moth: id argument required for \'edit\'.")
+                    } else {
+                        let arg = args[2].parse::<u8>();
+                        if arg.is_ok() {
+                            fns::functions::edit(arg.unwrap() - 1);
+                        } else {
+                            println!("moth: id argument must be an integer.")
+                        }
+                    }
+                },
+                "view" => {
+                    if args.len() == 2 {
+                        println!("moth: id argument required for \'view\'.")
+                    } else {
+                        let arg = args[2].parse::<u8>();
+                        if arg.is_ok() {
+                            fns::functions::view(arg.unwrap() - 1);
+                        } else {
+                            println!("moth: id argument must be an integer.")
+                        }
+                    }
+                },
+                "close" => {
+                    if args.len() == 2 {
+                        println!("moth: id argument required for \'close\'.")
+                    } else {
+                        let arg = args[2].parse::<u8>();
+                        if arg.is_ok() {
+                            fns::functions::close(arg.unwrap() - 1);
+                        } else {
+                            println!("moth: id argument must be an integer.")
+                        }
+                    }
+                },
+                "clear" => {
+                    fns::functions::clear()
+                },
                 "load" => {
                     if args.len() == 2 {
                         fns::functions::load(&format!("{}/.moth/default.moth", env::var("HOME").ok().unwrap()));

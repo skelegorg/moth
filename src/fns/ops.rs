@@ -45,7 +45,7 @@ pub fn deserialize_item(ser: &str) -> Result<Item, Error> {
         } else if line.starts_with("DESC:") {
             de.push_str(&line[5..len]);
         } else {
-            de.push_str(line);
+            de.push_str(&format!("\n{}", line));
         }
     }
 
