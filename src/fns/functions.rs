@@ -2,9 +2,48 @@ use super::ops;
 use std::fs;
 use std::env;
 use std::io::prelude::*;
+use std::process::Command;
 
 pub fn add() {
-    // env::temp_dir
+    // create tmp file with the dummy data
+    let r = fs::File::create("/tmp/mothtask.tmp");
+    if r.is_err() {
+        println!("moth: failed to create temporary file")
+    }
+    let mut file = r.ok().unwrap();
+    let r = file.write("Insert values after the colons - prio must be a number, description can be multi-lined\n\nPRIO:\nSTATUS:open\nTITLE:\nDESC:".as_bytes());
+    if r.is_err() {
+        println!("moth: failed to write to temporary file")
+    }
+
+    // spawn editor instance to edit file
+    let editor_r = env::var("EDITOR");
+    let editor = if editor_r.is_err() {
+        println!("moth: failed to get $EDITOR from environment vars. proceeding with nano as default.");
+        "nano".to_string()
+    } else {
+        editor_r.ok().unwrap()
+    };
+    let _ = Command::new("sh")
+        .arg("-c")
+        .arg(format!("{} /tmp/mothtask.tmp", editor))
+        .status()
+        .expect("moth: failed to spawn default editor");
+
+    // parse file to get values, initialize Item object, add to vec, rewrite to file
+    let r = fs::File::open("/tmp/mothtask.tmp");
+    if r.is_err() {
+        println!("moth: failed to open temporary file to read")
+    }
+    let mut file = r.ok().unwrap();
+    let mut contents = String::new();
+    if file.read_to_string(&mut contents).is_err() {
+        println!("moth: failed to read temporary file")
+    }
+    let mut strsplt: Vec<&str> = contents.split("\n").collect();
+    strsplt.remove(0); strsplt.remove(0);
+    let item = ops::deserialize_item(&strsplt.join("\n"));
+    
 }
 
 pub fn add_with_args(args: Vec<String>) {
@@ -87,7 +126,7 @@ pub fn del(arg: u8) {
 pub fn load(pre_arg: &String) {
     let arg: String;
     if !pre_arg.starts_with("/") {
-        arg = format!("{}/{}", env::var("HOME").ok().unwrap(), pre_arg);
+        arg = format!("{}/{}", env::var("PWD").ok().unwrap(), pre_arg);
     } else {
         arg = String::from(pre_arg);
     }

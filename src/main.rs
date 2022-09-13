@@ -55,7 +55,7 @@ fill in later lol
                 "close" => println!("close"),
                 "load" => {
                     if args.len() == 2 {
-                        fns::functions::load(&format!("{}/.moth/loaded", env::var("HOME").ok().unwrap()));
+                        fns::functions::load(&format!("{}/.moth/default.moth", env::var("HOME").ok().unwrap()));
                         println!("moth: loaded default config at ~/.moth/default.moth")
                     } else {
                         fns::functions::load(&args[2]);
