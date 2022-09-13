@@ -27,4 +27,3 @@ compile and install moth using cargo.
 
 moth is inspired by [bug](http://vicerveza.homeunix.net/~viric/soft/bug/) by Lluís Batlle i Rossell.
 
-this program seeks to adhere to the suckless philosophy.
