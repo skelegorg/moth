@@ -25,4 +25,6 @@ compile and install moth using cargo.
 1. `cargo build --release`
 2. the binary will be located in target/release/moth. from there install it to where you'd like. 
 
+note: sometimes, build will fail and say that "std::process::ExitCode" is unsafe and can't compile. i've fixed this by just running "rustup update".
+
 moth is inspired by [bug](http://vicerveza.homeunix.net/~viric/soft/bug/) by Lluís Batlle i Rossell.
