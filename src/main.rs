@@ -16,7 +16,7 @@ OPTIONS:
 add                       : opens dialogue to create a new item
 add   <optional arg>      : adds a new item with priority 1, status \"open\", title [argument], and an empty description
 list                      : lists all items with the status \"open\"
-list  <optional arg>      : lists all items with the status [argument]
+list  <optional arg>      : lists all items with the status [arg] - arg \"all\" prints all items
 del   <arg>               : deletes item with id [arg]
 edit  <arg>               : opens edit dialogue for item with id [arg]
 view  <arg>               : prints all data regarding item with id [arg]
@@ -59,11 +59,19 @@ load  <opt file path>     : loads a different .moth file. running with no argume
                     if args.len() == 2 {
                         println!("moth: id argument required for \'del\'.")
                     } else {
-                        let arg = args[2].parse::<u8>();
-                        if arg.is_ok() {
-                            fns::functions::del(arg.unwrap() - 1);
+                        let mut nargs: Vec<u8> = vec![];
+                        for i in 2..args.len() {
+                            let arg = args[i].parse::<u8>();
+                            if arg.is_ok() {
+                                nargs.push(arg.ok().unwrap() - 1);
+                            } else {
+                                println!("moth: id argument must be an integer.")
+                            }
+                        }
+                        if nargs.len() > 0 {
+                            fns::functions::del(nargs);
                         } else {
-                            println!("moth: id argument must be an integer.")
+                            println!("moth: no valid inputs")
                         }
                     }
                 },
@@ -95,11 +103,19 @@ load  <opt file path>     : loads a different .moth file. running with no argume
                     if args.len() == 2 {
                         println!("moth: id argument required for \'close\'.")
                     } else {
-                        let arg = args[2].parse::<u8>();
-                        if arg.is_ok() {
-                            fns::functions::close(arg.unwrap() - 1);
+                        let mut nargs: Vec<u8> = vec![];
+                        for i in 2..args.len() {
+                            let arg = args[i].parse::<u8>();
+                            if arg.is_ok() {
+                                nargs.push(arg.ok().unwrap() - 1);
+                            } else {
+                                println!("moth: id argument must be an integer.")
+                            }
+                        }
+                        if nargs.len() > 0 {
+                            fns::functions::close(nargs);
                         } else {
-                            println!("moth: id argument must be an integer.")
+                            println!("moth: no valid inputs")
                         }
                     }
                 },

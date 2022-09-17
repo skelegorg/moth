@@ -121,26 +121,37 @@ pub fn list_with_args(args: Vec<String>) {
     let mut count: u8 = 0;
     for i in items {
         count += 1;
-        if i.status == status_query {
+        if status_query == "all".to_string() {
+            println!("{}: {}", count, i.title);
+        }
+        else if i.status == status_query {
             println!("{}: {}", count, i.title);
         }
     }
 
 }
 
-pub fn del(arg: u8) {
+pub fn del(arg: Vec<u8>) {
     let items_r = ops::read_items_from_file(&load_path());
     if items_r.is_err() {
         println!("moth: failed to read items from {}", load_path());
         return
     }
     let mut items = items_r.ok().unwrap();
-    if arg >= items.len() as u8 {
-        println!("moth: id above range");
-        return
+    for &i in &arg {
+        if i >= items.len() as u8 {
+            println!("moth: id above range");
+            return
+        }
     }
     items.sort_by(|a, b| a.cmp(b));
-    items.remove(arg.into());
+
+    let mut sub = 0;
+    for i in arg {
+        items.remove((i - sub) as usize);
+        sub += 1;
+    }
+
     let ret = ops::write_items_to_file(items, &load_path());
     if ret.is_err() {
         println!("moth: error writing to file {}", load_path())
@@ -247,18 +258,22 @@ pub fn view(arg: u8) {
     println!("\n{}\n\n{}", item.title, item.description);
 }
 
-pub fn close(arg: u8) {
+pub fn close(arg: Vec<u8>) {
     let items_r = ops::read_items_from_file(&load_path());
     if items_r.is_err() {
         println!("moth: failed to read items from {}", load_path());
         return
     }
     let mut items = items_r.ok().unwrap();
-    if arg >= items.len() as u8 {
-        println!("moth: id above range")
+    for &i in &arg {
+        if i >= items.len() as u8 {
+            println!("moth: id above range")
+        }
     }
     items.sort_by(|a, b| a.cmp(b));
-    items[arg as usize].status = "closed".to_string();
+    for &i in &arg {
+        items[i as usize].status = "closed".to_string();
+    }
     match ops::write_items_to_file(items, &load_path()) {
         Err(_) => {
             println!("moth: failed to write items to {}", load_path())
@@ -287,7 +302,7 @@ pub fn clear() {
     println!("moth: clearing {} closed item(s)", num);
     let mut sub = 0;
     for i in l {
-        items.remove(i + sub);
+        items.remove(i - sub);
         sub += 1;
     }
     match ops::write_items_to_file(items, &load_path()) {
