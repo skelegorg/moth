@@ -15,9 +15,9 @@ OPTIONS:
 
 add                       : opens dialogue to create a new item
 add   <optional arg>      : adds a new item with priority 1, status \"open\", title [argument], and an empty description
-list                      : lists all items with the status \"open\"
+list | ls                 : lists all items with the status \"open\"
 list  <optional arg>      : lists all items with the status [arg] - arg \"all\" prints all items
-del   <arg>               : deletes item with id [arg]
+del  | rm <arg>           : deletes item with id [arg]
 edit  <arg>               : opens edit dialogue for item with id [arg]
 view  <arg>               : prints all data regarding item with id [arg]
 close <arg>               : chanegs the status of item with id [arg] to \"closed\"
@@ -55,7 +55,34 @@ load  <opt file path>     : loads a different .moth file. running with no argume
                         fns::functions::list_with_args(args);
                     }
                 },
+                "ls" => {
+                    if args.len() == 2 {
+                        fns::functions::list();
+                    } else {
+                        fns::functions::list_with_args(args);
+                    }
+                },
                 "del" => {
+                    if args.len() == 2 {
+                        println!("moth: id argument required for \'del\'.")
+                    } else {
+                        let mut nargs: Vec<u8> = vec![];
+                        for i in 2..args.len() {
+                            let arg = args[i].parse::<u8>();
+                            if arg.is_ok() {
+                                nargs.push(arg.ok().unwrap() - 1);
+                            } else {
+                                println!("moth: id argument must be an integer.")
+                            }
+                        }
+                        if nargs.len() > 0 {
+                            fns::functions::del(nargs);
+                        } else {
+                            println!("moth: no valid inputs")
+                        }
+                    }
+                },
+                "rm" => {
                     if args.len() == 2 {
                         println!("moth: id argument required for \'del\'.")
                     } else {
